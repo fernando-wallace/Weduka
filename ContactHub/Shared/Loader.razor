@@ -1,0 +1,72 @@
+﻿@inject ContactHubServices _integracaoAPI
+<style>
+    .overlay {
+        content: ' ';
+        width: 100%;
+        height: 100%;
+        z-index: 9998;
+        position: absolute;
+        background: rgba(1, 45, 86, 0.08);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    .loader {
+        border: 16px solid var(--semitransparent-white);
+        border-top: 16px solid var(--main-color);
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        margin-inline: auto;
+    }
+
+    .busy-dialog {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 30vh;
+        margin-left: auto;
+        margin-right: auto;
+        width: 450px;
+        z-index: 9999;
+        border: 1px solid white;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 0.5rem;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+    }
+</style>
+@if (ShowLoader)
+{
+    <div class="overlay" />
+    <div class="busy-dialog">
+        <div>
+            <div class="flex-column text-center p-5">
+                <div class="loader"></div>
+                <br>
+                <div class="logo-wrapper">
+                    <img class="logo" src="images/logo.png" />
+                    <div class="separador">|</div>
+                    <div class="logo-text small">
+                        ContactHub
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowLoader { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        _integracaoAPI.LoaderStateHasChanged = (bool showLoader) =>
+        {
+            ShowLoader = showLoader;
+            StateHasChanged();
+        };
+    }
+}

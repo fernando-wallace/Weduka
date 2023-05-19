@@ -1,0 +1,98 @@
+﻿@inject ContactHubServices _integracaoAPI
+@inject DialogService Dialog
+<style>
+    input {
+        width: 100%;
+    }
+
+    .margin-left-auto {
+        margin-left: auto;
+    }
+</style>
+
+<div class="form">
+    <div class="input-wrapper">
+        <div class="grey-text">Nome completo:</div>
+        <RadzenTextBox @bind-Value="pessoa.NomePessoa" />
+    </div>
+    <div class="input-wrapper">
+        <div class="grey-text">E-mail:</div>
+        <RadzenTextBox @bind-Value="pessoa.Email" />
+    </div>
+    <div class="input-wrapper">
+        <div class="grey-text">Telefone:</div>
+        <RadzenTextBox @bind-Value="pessoa.Telefone" />
+    </div>
+    <div class="input-wrapper">
+        <div class="grey-text">Whatsapp:</div>
+        <RadzenTextBox @bind-Value="pessoa.Whatsapp" />
+    </div>
+    <br />
+    <div class="flex">
+        <RadzenButton class="margin-left-auto" Click=@(async () => await AtualizarPessoa()) Text="@(pessoa.IdPessoa == 0 ? "Criar cadastro" : "Atualizar Cadastro")"></RadzenButton>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Pessoa pessoaBackup { get; set; }
+    private Pessoa pessoa { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        pessoa = new(pessoaBackup);
+    }
+
+    private async Task AtualizarPessoa()
+    {
+        bool isCreate = pessoa.IdPessoa == 0;
+        (bool sucesso, string resposta) retorno;
+
+        try
+        {
+            pessoa.Validate();
+
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+            if (isCreate)
+            {
+                CreateLinkPessoaRequestDTO novoLinkPessoa = new()
+                    {
+                        IdPessoaSolicitante = _integracaoAPI.usuarioAtual.IdPessoa,
+                        Pessoa = new() { IdPessoa = pessoa.IdPessoa }
+                    };
+
+                retorno = await _integracaoAPI.ExecutaRequisicao(
+                    "LinkPessoa/Create",
+                    HttpMethod.Post,
+                    JsonSerializer.Serialize(novoLinkPessoa),
+                    true
+                );
+            }
+            else
+            {
+                retorno = await _integracaoAPI.ExecutaRequisicao(
+                    "Pessoa/Update",
+                    HttpMethod.Put,
+                    JsonSerializer.Serialize(pessoa),
+                    true
+                );
+
+            }
+
+            if (retorno.sucesso)
+            {
+                await _integracaoAPI.LoadPessoas();
+                Dialog.Close();
+            }
+        }
+        catch (Exception ex)
+        {
+            await Dialog.Alert(
+                ex.Message,
+                "Erro de validação"
+            );
+
+            pessoa = new(pessoaBackup);
+        }
+    }
+}

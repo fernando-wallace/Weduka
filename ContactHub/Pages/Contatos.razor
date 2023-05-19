@@ -1,0 +1,526 @@
+﻿@page "/Contatos"
+@inject ContactHubServices _integracaoAPI
+@inject NavigationManager NavManager
+@inject DialogService Dialog
+<style>
+    main {
+        background-color: var(--light-background-color);
+        height: 100vh;
+    }
+
+    .background-wrapper {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        position: absolute;
+        z-index: -1;
+    }
+
+    .background {
+        background-repeat: no-repeat;
+        background-size: cover;
+        height: 75%;
+        opacity: 0.3;
+        position: absolute;
+        bottom: 0;
+        right: 5%;
+        transform: translate(5%, 0);
+    }
+
+    .menu {
+        background-color: var(--semitransparent-white);
+        padding: 5vh 3vw;
+        height: 100%;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-bottom-right-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+    }
+
+    .logo-text.small {
+        font-size: 2rem;
+    }
+
+    .search-input {
+        width: 100%;
+        font-size: 1.3rem;
+        padding: 1rem;
+        height: 4rem;
+        border: var(--rz-input-border);
+        border-radius: var(--rz-input-border-radius);
+        overflow: hidden;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        background-color: var(--semitransparent-white);
+        color: black;
+        transition: background-color 0.3s ease;
+        margin-bottom: 3rem;
+    }
+
+    input {
+        color: black;
+    }
+
+    .search-input:focus, .search-input:hover {
+        outline: 2px solid var(--hover-color);
+        background-color: white;
+    }
+
+    .page-wrapper{
+        margin: 5vw;
+        width: 100%;
+        height: 90%;
+    }
+
+    .h0 {
+        height: 0;
+        opacity: 0;
+    }
+
+    .person-card {
+        text-align: center;
+        line-height: 2rem;
+        width: fit-content;
+        padding: 2rem 2rem 4rem 2rem;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        border-radius: 0.3rem;
+        background-color: var(--semitransparent-white);
+        transition: background-color 0.3s ease;
+    }
+
+    .person-card.add {
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .person-card.add > div {
+        font-size: 1.3rem;
+        margin-left: 0.5rem;
+    }
+
+    .person-card:hover, .perfil-wrapper:hover{
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .cards-wrapper {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .rz-button.rz-secondary{
+        display: none;
+    }
+
+    .rz-button.rz-button-md.rz-variant-filled.rz-primary{
+        margin-left: auto;
+    }
+
+    .delete-btn {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .card-icons {
+    }
+
+
+    .person-card:hover ~ div, .person-card ~div:hover {
+        transform: scale(1);
+    }
+
+    .card-icons > span > .rzi {
+        color: var(--red-color);
+        transition: transform ease 0.3s;
+    }
+
+        .card-icons > span > .rzi:hover {
+            color: var(--red-color);
+            transform: scale(1.3);
+        }
+
+    .margin-top-1 {
+        margin-top: 1rem;
+    }
+
+    .card-icons {
+        display: flex;
+        position: absolute;
+        bottom: 6%;
+        transform: scale(0);
+        transition: transform 0.3s ease;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .card-wrapper {
+        position: relative;
+    }
+
+    h3 {
+        font-weight: bold;
+        color: var(--main-color);
+        margin: 0;
+    }
+
+    hr {
+        margin: 0.5rem 0 2rem 0;
+        border: 1px solid var(--main-color);
+    }
+
+    .perfil-wrapper {
+        text-align: center;
+        padding: 2vh 1vw;
+        line-height: 4vh;
+        transition: background-color 0.3s ease;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        font-size: 1.8vh;
+    }
+
+    .perfil-wrapper > b {
+        font-size: 2vh;
+        flex-wrap: wrap;
+    }
+
+    .indicador-wrapper, .perfil-wrapper {
+        border: 1px solid var(--gray-color);
+        border-radius: 0.5rem;
+    }
+
+    .indicador-wrapper {
+        margin-inline: 1rem;
+        padding: 0.5rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .indicador {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .indicador > * {
+        font-size: 4vh;
+        color: var(--main-color);
+    }
+
+    .indicador > .rzi {
+        font-size: 4vh;
+        margin-left: 0.5rem;
+        padding-bottom: 5px;
+    }
+
+    .indicador > .rzi.big {
+        font-size: 6vh;
+    }
+
+    .indicador ~ * {
+        text-align: justify;
+        margin-top: -10px;
+    }
+
+    .avatar > img {
+        width: 6vw;
+        height: 6vw;
+        margin-bottom: 1rem;
+    }
+
+    .logout > span > .rzi {
+        color: white !important;
+    }
+
+    .rz-button.rz-button-md.rz-variant-filled.rz-primary:not(.margin-left-auto) {
+        margin: 0;
+    }
+
+    .whatsapp {
+        text-align: center;
+    }
+
+    .whatsapp > img {
+        height: 1.5rem;
+    }
+</style>
+@{
+    <div class="background-wrapper">
+        <img class="background" src="images/contatos-background.png">
+    </div>
+    <div class="flex h-100">
+        <div class="menu">
+            <div class="logo-wrapper">
+                <img class="logo" src="images/logo.png" />
+                <div class="separador">|</div>
+                <div class="logo-text small">
+                    ContactHub
+                </div>
+            </div>
+            <br>
+            <div class="perfil-wrapper" onclick="@(async () => await AbrirPopUpAtualizarPessoa(_integracaoAPI.usuarioAtual))" title="Editar seu Perfil">
+                <div class="avatar">
+                    <img src="/images/avatar.png">
+                </div>
+                <b>@_integracaoAPI.usuarioAtual?.NomePessoa</b>
+                <br>
+                @_integracaoAPI.usuarioAtual?.Email
+                <br>
+                @_integracaoAPI.usuarioAtual?.Telefone
+                <br>
+                <div class="whatsapp">
+                    <img src="/images/whatsapp-icon.png">
+                    @_integracaoAPI.usuarioAtual?.Whatsapp
+                </div>
+            </div>
+            <br>
+            <div class="indicadores-wrapper">
+                <div class="indicador-wrapper">
+                    @{
+                        int quantidadeLinksPessoas = linksContatosUsuario?.Count ?? 0;
+                        string plural = quantidadeLinksPessoas == 1 ? "" : "s";
+                        <div class="indicador">
+                            <b>@quantidadeLinksPessoas</b>
+                            <RadzenIcon class="not-hover" Icon="contacts"></RadzenIcon>
+                        </div>
+                        <div class="text-center" style="margin-top: -5px;">
+                            @($"Contato{plural} Vinculado{plural}")
+                        </div>
+                    }
+                </div>
+                <div class="indicador-wrapper">
+                    @{
+                        int quantidadePessoasCadastradas = _integracaoAPI.pessoasCadastradas?.Count ?? 0;
+                        plural = quantidadePessoasCadastradas == 1 ? "" : "s";
+                        <div class="indicador">
+                            <b>@quantidadePessoasCadastradas</b>
+                            <RadzenIcon class="not-hover big" Icon="groups"></RadzenIcon>
+                        </div>
+                        <div class="text-center">
+                            @($"Usuário{plural} Cadastrado{plural}")
+                        </div>
+                    }
+                </div>
+            </div>
+            <br>
+            <div class="flex justify-content-center">
+                <RadzenButton class="logout" Click="Logout" Icon="logout" title="Realizar Logout" Text="Logout"></RadzenButton>
+            </div>
+        </div>
+        <div class="page-wrapper">
+            <input type="text" class="search-input" @oninput="OnValueChanged" @bind-value=filtroBusca Placeholder="Digite um nome para Buscar, Criar ou Importar um contato.">
+            <br />
+            <br />
+            <h3>Meus Contatos</h3>
+            <hr/>
+            <div class="cards-wrapper">
+                @if (contatosUsuarioFiltro is not null)
+                {
+                    if (contatosUsuarioFiltro.Any())
+                    {
+                        foreach (Pessoa pessoa in contatosUsuarioFiltro)
+                        {
+                            <div class="card-wrapper">
+                                <div class="person-card pointer-none" title="Editar Contato" onclick="@(async () => await AbrirPopUpAtualizarPessoa(pessoa))">
+                                    <b>@pessoa.NomePessoa</b>
+                                    <br>
+                                    @pessoa.Email
+                                    <br>
+                                    @pessoa.Telefone
+                                    <br>
+                                    <div class="whatsapp">
+                                        <img src="/images/whatsapp-icon.png">
+                                        @pessoa.Whatsapp
+                                    </div>
+                                </div>
+                                <div class="card-icons">
+                                    <span><RadzenIcon title="Remover Vínculo" class="delete-btn hidden" Icon="app_blocking" onclick="@(async () => await DeletarLinkPessoa(pessoa))"></RadzenIcon></span>
+                                    <div class="separador">|</div>
+                                    <span>
+                                        <RadzenIcon title="Deletar Usuário" class="delete-btn hidden" Icon="delete" onclick="@(async () => await DeletarPessoa(pessoa))"></RadzenIcon>
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(filtroBusca) && contatosUsuarioFiltro.Count < 3)
+                    {
+                        <div class="person-card add" onclick="@(async () => await AbrirPopUpAtualizarPessoa(new(){NomePessoa = filtroBusca}))">
+                            <RadzenIcon Icon="add"></RadzenIcon>
+                            <div>Cadastrar "@filtroBusca"</div>
+                        </div>
+
+                        List<int> idsPessoasJaLinkadas = contatosUsuarioFiltro.Select(c => c.IdPessoa).ToList();
+                        List<Pessoa> pessoasParaImportar = _integracaoAPI.pessoasCadastradas.Where(
+                            p => p.NomePessoa.ToLower().Contains(filtroBusca?.ToLower())
+                                 && !idsPessoasJaLinkadas.Contains(p.IdPessoa)
+                                 && p.IdPessoa != _integracaoAPI.usuarioAtual.IdPessoa
+                        ).ToList();
+                        if (pessoasParaImportar.Any())
+                        {
+                            foreach (Pessoa pessoaParaImportar in pessoasParaImportar)
+                            {
+                                <div class="person-card add" onclick="@(() => ImportarContato(pessoaParaImportar))">
+                                    <RadzenIcon Icon="download"></RadzenIcon>
+                                    <div>Importar "@pessoaParaImportar.NomePessoa"</div>
+                                </div>
+                            }
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<LinkPessoa>? linksContatosUsuario;
+    private List<Pessoa>? contatosUsuario, contatosUsuarioFiltro;
+    private string? filtroBusca;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_integracaoAPI.usuarioAtual is null || _integracaoAPI.usuarioAtual.IdPessoa == 0)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        await ObterLinksPessoa();
+    }
+
+    private async Task ObterLinksPessoa()
+    {
+        (bool sucesso, string resposta) retorno = await _integracaoAPI.ExecutaRequisicao($"LinkPessoa/GetLinksPessoa?idPessoa={_integracaoAPI.usuarioAtual?.IdPessoa}", HttpMethod.Get);
+        if (retorno.sucesso)
+        {
+            linksContatosUsuario = JsonSerializer.Deserialize<List<LinkPessoa>>(retorno.resposta) ?? new();
+            if (linksContatosUsuario is not null)
+            {
+                contatosUsuario = _integracaoAPI.pessoasCadastradas?.Where(p => linksContatosUsuario.Select(l => l.IdPessoaLink).Contains(p.IdPessoa)).ToList();
+                contatosUsuarioFiltro = contatosUsuario;
+            }
+        }
+    }
+
+    private void OnValueChanged(ChangeEventArgs args)
+    {
+        filtroBusca = args.Value?.ToString();
+        contatosUsuarioFiltro = string.IsNullOrEmpty(filtroBusca) ?
+            contatosUsuario :
+            contatosUsuario?.Where(p => p.NomePessoa.ToLower().Contains(filtroBusca?.ToLower())).ToList();
+
+        StateHasChanged();
+    }
+
+    private async Task AbrirPopUpAtualizarPessoa(Pessoa pessoa)
+    {
+        await Dialog.OpenAsync<AtualizarContato>("Atualizar Contato", new()
+        {
+            { "pessoaBackup", pessoa }
+        });
+        filtroBusca = "";
+        contatosUsuarioFiltro = contatosUsuario;
+        StateHasChanged();
+    }
+
+    private async Task ImportarContato(Pessoa pessoa)
+    {
+        bool? retornoConfirmacao = await Dialog.Confirm(
+            $"O contato de {pessoa.NomePessoa} será importado para sua Lista de Contatos.<br/><br/>Deseja confirmar essa ação?",
+            "Importar Contato Existente",
+            new() { OkButtonText = "Sim" });
+
+        if (retornoConfirmacao is not null && (bool)retornoConfirmacao)
+        {
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+            CreateLinkPessoaRequestDTO novoLinkPessoa = new()
+            {
+                IdPessoaSolicitante = _integracaoAPI.usuarioAtual.IdPessoa,
+                Pessoa = new() { IdPessoa = pessoa.IdPessoa }
+            };
+
+            (bool sucesso, string resposta) retorno = await _integracaoAPI.ExecutaRequisicao(
+                "LinkPessoa/Create",
+                HttpMethod.Post,
+                JsonSerializer.Serialize(novoLinkPessoa),
+                true
+            );
+
+            if (retorno.sucesso)
+            {
+                filtroBusca = "";
+                await ObterLinksPessoa();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeletarLinkPessoa(Pessoa pessoa)
+    {
+        bool? retornoConfirmacao = await Dialog.Confirm(
+            $"O contato de <b>{pessoa.NomePessoa}</b> será desvinculado de sua Lista de Contatos.<br>Essa ação não poderá ser desfeita.<br/><br/>Deseja confirmar essa ação?",
+            "Remover Vínculo de Contato",
+            new() { OkButtonText = "REMOVER VÍNCULO" });
+
+        if (retornoConfirmacao is not null && (bool)retornoConfirmacao)
+        {
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+            LinkPessoa linkPessoa = new()
+            {
+                IdPessoa = _integracaoAPI.usuarioAtual.IdPessoa,
+                IdPessoaLink = pessoa.IdPessoa
+            };
+
+            (bool sucesso, string resposta) retorno = await _integracaoAPI.ExecutaRequisicao("LinkPessoa/Delete", HttpMethod.Delete, JsonSerializer.Serialize(linkPessoa), true);
+            if (retorno.sucesso)
+            {
+                if (linksContatosUsuario is not null)
+                {
+                    linksContatosUsuario.RemoveAll(l => l.IdPessoa == linkPessoa.IdPessoa && l.IdPessoaLink == linkPessoa.IdPessoaLink);
+                    contatosUsuario = _integracaoAPI.pessoasCadastradas?.Where(p => linksContatosUsuario.Select(l => l.IdPessoaLink).Contains(p.IdPessoa)).ToList();
+                    contatosUsuarioFiltro = contatosUsuario;
+                    StateHasChanged();
+                }
+            }
+        }
+
+    }
+
+    private async Task DeletarPessoa(Pessoa pessoa)
+    {
+        bool? retornoConfirmacao = await Dialog.Confirm(
+            $"O usuário de <b>{pessoa.NomePessoa}</b> e todos os seus vínculos serão excluídos permanentemente.<br>Essa ação não poderá ser desfeita.<br/><br/>Deseja confirmar essa ação?",
+            "Excluir Usuário Existente",
+            new() { OkButtonText = "EXCLUIR USUÁRIO" });
+
+        if (retornoConfirmacao is not null && (bool)retornoConfirmacao)
+        {
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+            (bool sucesso, string resposta) retorno = await _integracaoAPI.ExecutaRequisicao($"Pessoa/Delete?idPessoa={pessoa.IdPessoa}", HttpMethod.Delete, null, true);
+            if (retorno.sucesso)
+            {
+                if (linksContatosUsuario is not null)
+                {
+                    _integracaoAPI.pessoasCadastradas?.RemoveAll(p => p.IdPessoa == pessoa.IdPessoa);
+                    contatosUsuario = _integracaoAPI.pessoasCadastradas?.Where(p => linksContatosUsuario.Select(l => l.IdPessoaLink).Contains(p.IdPessoa)).ToList();
+                    contatosUsuarioFiltro = contatosUsuario;
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    private void Logout()
+    {
+        _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+        _integracaoAPI.usuarioAtual = new();
+        NavManager.NavigateTo("/");
+    }
+}

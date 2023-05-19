@@ -1,0 +1,231 @@
+﻿@page "/"
+@inject NavigationManager NavManager
+@inject DialogService Dialog
+@inject ContactHubServices _integracaoAPI
+
+<style>
+    main {
+        background-color: var(--background-color);
+    }
+
+    .background-wrapper {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+    }
+
+    .background {
+        background-repeat: no-repeat;
+        background-size: cover;
+        height: 70%;
+        opacity: 0.5;
+        position: absolute;
+        top: 50%;
+        left: 10%;
+        transform: translate(-10%, -50%);
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.8);
+        position: absolute;
+        top: 50%;
+        left: 75%;
+        transform: translate(-75%, -50%);
+        padding: 3vw 3vw;
+        width: 35vw;
+        border-radius: 1rem;
+        -webkit-box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+        box-shadow: 5px 5px 5px -1px rgba(0,0,0,0.3);
+    }
+
+    input, .rz-autocomplete {
+        width: 100%;
+    }
+
+    .input-wrapper {
+        width: 100%;
+    }
+
+    .grey-text {
+        color: var(--gray-color);
+    }
+
+    .center-text {
+        text-align: center;
+    }
+
+    .ou {
+        display: flex;
+        justify-content: center;
+        margin: 1.5rem;
+    }
+
+    hr {
+        width: 100%;
+    }
+
+    hr.margin {
+        margin-block: 1vh 3vh;
+    }
+
+    .margin-left-1 {
+        margin-left: 0.5rem;
+    }
+
+    .width-0 {
+        width: 0;
+    }
+
+    .margin-top {
+        margin-top: 4vh;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    h4 {
+        color: var(--gray-color);
+        font-size: 1.3rem;
+    }
+
+    .space-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .small-margin-bottom{
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<PageTitle>Login</PageTitle>
+<div class="background-wrapper">
+    <img class="background" src="images/login-background.png">
+    <div>
+        <div class="card">
+            <div class="logo-wrapper">
+                <img class="logo" src="images/logo.png" />
+                <div class="separador">|</div>
+                <div class="logo-text">
+                    ContactHub
+                </div>
+            </div>
+            <div class="@(subTelaAtual == SubTelas.Login ? "margin-top" : "margin-top hidden")">
+                <div class="flex">
+                    <div class="input-wrapper">
+                        <div class="grey-text small-margin-bottom">Identifique-se para continuar:</div>
+                        <RadzenAutoComplete @bind-Value="pessoa.NomePessoa" FilterCaseSensitivity="Radzen.FilterCaseSensitivity.CaseInsensitive" Data="_integracaoAPI.pessoasCadastradas" Placeholder="Seu nome" TextProperty="@nameof(Pessoa.NomePessoa)" />
+                    </div>
+                    <RadzenIcon class="margin-left-1 margin-block" Icon="login" title="Login" onclick="@(() => Logar())"></RadzenIcon>
+                </div>
+                <div class="flex">
+                    <hr/>
+                    <div class="ou grey-text">
+                        ou
+                    </div>
+                    <hr />
+                </div>
+                <div class="grey-text center-text">Novo por aqui? <alink onclick="@(() => AlterarSubTela())">Clique aqui para se registrar.</alink></div>
+            </div>
+            <div class="@(subTelaAtual == SubTelas.Registrar ? "form" : "form hidden")">
+                <h4 class="margin-top">Registro de Novo Usuário</h4>
+                <hr class="margin" />
+                <div class="input-wrapper">
+                    <div class="grey-text">Nome completo:</div>
+                    <RadzenTextBox @bind-Value="pessoa.NomePessoa" />
+                </div>
+                <div class="input-wrapper">
+                    <div class="grey-text">E-mail:</div>
+                    <RadzenTextBox @bind-Value="pessoa.Email" />
+                </div>
+                <div class="input-wrapper">
+                    <div class="grey-text">Telefone:</div>
+                    <RadzenTextBox @bind-Value="pessoa.Telefone" />
+                </div>
+                <div class="input-wrapper">
+                    <div class="grey-text">Whatsapp:</div>
+                    <RadzenTextBox @bind-Value="pessoa.Whatsapp" />
+                </div>
+                <br />
+                <div class="space-between">
+                    <RadzenIcon Icon="arrow_back" title="Voltar para Login" onclick="@(() => AlterarSubTela())"></RadzenIcon>
+                    <RadzenButton Text="Confirmar cadastro" Click="@(async () => await CriarPessoa())"></RadzenButton>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private enum SubTelas
+    {
+        Login, Registrar
+    };
+    private SubTelas subTelaAtual = SubTelas.Login;
+    private Pessoa pessoa = new();
+    private bool isApiAvailable;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isApiAvailable = await _integracaoAPI.LoadPessoas();
+    }
+
+    private void Logar()
+    {
+        if (!string.IsNullOrEmpty(pessoa.NomePessoa) && isApiAvailable)
+        {
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+
+            Pessoa? usuarioSelecionado = _integracaoAPI.pessoasCadastradas?.FirstOrDefault(p => p.NomePessoa == pessoa.NomePessoa);
+            if (usuarioSelecionado is null)
+            {
+                Dialog.Alert("Selecione um nome da lista para continuar.", "Erro");
+            }
+            else
+            {
+                _integracaoAPI.usuarioAtual = usuarioSelecionado;
+                NavManager.NavigateTo("/Contatos");
+                return;
+            }
+        }
+
+        Dialog.Alert(
+            isApiAvailable ? "Selecione um nome da lista para continuar." : "A API do Sistema está indisponível no momento. Verifique sua conexão ou tente novamente mais tarde.",
+            "Erro");
+
+    }
+
+    private void AlterarSubTela()
+    {
+        pessoa = new();
+        subTelaAtual = subTelaAtual == SubTelas.Login ? SubTelas.Registrar : SubTelas.Login;
+    }
+
+    private async Task CriarPessoa()
+    {
+        try
+        {
+            pessoa.Validate();
+
+            _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+            (bool sucesso, string resposta) retorno = await _integracaoAPI.ExecutaRequisicao("Pessoa/Create", HttpMethod.Post, JsonSerializer.Serialize(pessoa), true);
+            if (retorno.sucesso)
+            {
+                _integracaoAPI.LoaderStateHasChanged?.Invoke(true);
+                await _integracaoAPI.LoadPessoas();
+                _integracaoAPI.usuarioAtual = _integracaoAPI.pessoasCadastradas?.FirstOrDefault(p => p.NomePessoa == pessoa.NomePessoa);
+                NavManager.NavigateTo("/Contatos");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Dialog.Alert(
+                ex.Message,
+                "Erro de validação"
+            );
+        }
+        
+    }
+}

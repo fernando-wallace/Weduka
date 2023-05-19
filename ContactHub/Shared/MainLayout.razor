@@ -1,0 +1,84 @@
+﻿@inherits LayoutComponentBase
+<style>
+    :root {
+        --main-color: #2B336E;
+        --red-color: #a52828;
+        --hover-color: #5660af;
+        --gray-color: #898989;
+        --background-color: #2b336edb;
+        --light-background-color: #585f9157;
+        --semitransparent-white: #ffffff73;
+    }
+
+    .logo-wrapper {
+        font-size: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    img.logo {
+        height: 4rem;
+    }
+
+    .separador {
+        margin-inline: 0.8rem;
+        opacity: 0.6;
+        color: var(--main-color);
+    }
+
+    .logo-text {
+        margin-top: 10px;
+        font-weight: bold;
+        color: var(--main-color);
+    }
+
+    .flex {
+        display: flex;
+        align-items: center;
+    }
+
+    .form > div:not(:last-of-type) {
+        margin-bottom: 1vh;
+    }
+
+    .rz-button.rz-primary.rz-shade-default {
+        background-color: var(--main-color);
+    }
+
+    .rzi {
+        font-size: 2.5rem;
+    }
+
+        .rzi.margin-block {
+            margin-block: auto 0.7rem;
+        }
+
+    alink {
+        text-decoration: underline;
+    }
+
+    .rzi, alink {
+        color: var(--main-color);
+        transition: 0.2s color ease;
+    }
+
+        .rzi:hover:not(.not-hover), alink:hover {
+            cursor: pointer;
+            color: var(--hover-color);
+        }
+
+    .rz-button.rz-primary.rz-shade-default:hover {
+        color: white;
+        background-color: var(--hover-color);
+    }
+
+    .rz-dialog-wrapper {
+        z-index: 1020;
+    }
+</style>
+<Loader></Loader>
+<RadzenDialog></RadzenDialog>
+<main>
+    @Body
+</main>
