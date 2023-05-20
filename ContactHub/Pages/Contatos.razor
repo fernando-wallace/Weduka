@@ -421,7 +421,7 @@
 
     private async Task AbrirPopUpAtualizarPessoa(Pessoa pessoa)
     {
-        await Dialog.OpenAsync<AtualizarContato>("Atualizar Contato", new()
+        await Dialog.OpenAsync<AtualizarContato>(pessoa.IdPessoa == 0 ? "Cadastrar Contato" : "Atualizar Contato", new()
         {
             { "pessoaBackup", pessoa }
         });
